@@ -1,7 +1,6 @@
 package de.rnd7.fritzboxmqttgw;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.EnumSet;
 
 import de.rnd7.mqttgateway.GwMqttClient;
@@ -40,16 +39,17 @@ public class Main {
         }
 
         try {
-            final Config config = ConfigParser.parse(new File(args[0]), Config.class);
-
-            if (EnumSet.of(BoxType.dsl, BoxType.cable).contains(config.getFritzbox().getBoxType())) {
-                new Main(config);
-            }
-            else {
-                LOGGER.error("BoxType <" + config.getFritzbox().getBoxType() + "> not supported", new Throwable());
-            }
-        } catch (final IOException e) {
+            new Main(validate(ConfigParser.parse(new File(args[0]), Config.class)));
+        } catch (final Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
+    }
+
+    private static Config validate(Config config) {
+        if (!EnumSet.of(BoxType.dsl, BoxType.cable).contains(config.getFritzbox().getBoxType())) {
+            throw new IllegalStateException(String.format("BoxType <%s> not supported", config.getFritzbox().getBoxType()));
+        }
+
+        return config;
     }
 }

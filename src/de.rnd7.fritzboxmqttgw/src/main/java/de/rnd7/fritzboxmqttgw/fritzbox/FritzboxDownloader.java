@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 class FritzboxDownloader {
     private static final Logger LOGGER = LoggerFactory.getLogger(FritzboxDownloader.class);
@@ -58,70 +59,93 @@ class FritzboxDownloader {
         }
     }
 
-    private void wanDSLIfConfig(final FritzConnection connection, final JSONObject result) throws IOException, NoSuchFieldException {
+    private void wanDSLIfConfig(final FritzConnection connection, final JSONObject result) throws IOException {
         final Response response = get(connection, "WANDSLInterfaceConfig:1", "GetInfo");
 
-        result.put("NewDownstreamMaxRate", response.getValueAsLong("NewDownstreamMaxRate"));
-        result.put("NewUpstreamMaxRate", response.getValueAsLong("NewUpstreamMaxRate"));
-        result.put("NewDownstreamCurrRate", response.getValueAsLong("NewDownstreamCurrRate"));
-        result.put("NewUpstreamCurrRate", response.getValueAsLong("NewUpstreamCurrRate"));
+        Stream.of("NewDownstreamMaxRate", "NewUpstreamMaxRate", "NewDownstreamCurrRate", "NewUpstreamCurrRate")
+            .forEach(key -> putLong(key, response, result));
     }
 
-    private void linkConfig(final FritzConnection connection, final JSONObject result) throws IOException, NoSuchFieldException {
+    private void linkConfig(final FritzConnection connection, final JSONObject result) throws IOException {
         final Response response = get(connection, "WANDSLLinkConfig:1", "GetStatistics");
-        result.put("NewATMCRCErrors", response.getValueAsLong("NewATMCRCErrors"));
-        result.put("NewATMTransmittedBlocks", response.getValueAsLong("NewATMTransmittedBlocks"));
-        result.put("NewATMReceivedBlocks", response.getValueAsLong("NewATMReceivedBlocks"));
-        result.put("NewAAL5CRCErrors", response.getValueAsLong("NewAAL5CRCErrors"));
+
+        Stream.of("NewATMCRCErrors", "NewATMTransmittedBlocks", "NewATMReceivedBlocks", "NewAAL5CRCErrors")
+            .forEach(key -> putLong(key, response, result));
     }
 
-    private void wanIpConfig(final FritzConnection connection, final JSONObject result) throws IOException, NoSuchFieldException {
+    private void wanIpConfig(final FritzConnection connection, final JSONObject result) throws IOException {
         final Response response = get(connection, "WANIPConnection:1", "GetInfo");
 
-        result.put("NewEnable", response.getValueAsBoolean("NewEnable"));
-        result.put("NewConnectionStatus", response.getValueAsString("NewConnectionStatus"));
-        result.put("NewPossibleConnectionTypes", response.getValueAsString("NewPossibleConnectionTypes"));
-        result.put("NewConnectionType", response.getValueAsString("NewConnectionType"));
-        result.put("NewName", response.getValueAsString("NewName"));
-        result.put("NewUptime", response.getValueAsLong("NewUptime"));
-        result.put("NewLastConnectionError", response.getValueAsString("NewLastConnectionError"));
-        result.put("NewRSIPAvailable", response.getValueAsBoolean("NewRSIPAvailable"));
-        result.put("NewNATEnabled", response.getValueAsBoolean("NewNATEnabled"));
-        result.put("NewExternalIPAddress", response.getValueAsString("NewExternalIPAddress"));
-        result.put("NewDNSServers", response.getValueAsString("NewDNSServers"));
-        result.put("NewMACAddress", response.getValueAsString("NewMACAddress"));
-        result.put("NewConnectionTrigger", response.getValueAsString("NewConnectionTrigger"));
-        result.put("NewRouteProtocolRx", response.getValueAsString("NewRouteProtocolRx"));
-        result.put("NewDNSEnabled", response.getValueAsBoolean("NewDNSEnabled"));
-        result.put("NewDNSOverrideAllowed", response.getValueAsBoolean("NewDNSOverrideAllowed"));
+        Stream.of("NewUptime")
+            .forEach(key -> putLong(key, response, result));
+
+        Stream.of("NewEnable", "NewRSIPAvailable", "NewNATEnabled", "NewDNSEnabled", "NewDNSOverrideAllowed")
+            .forEach(key -> putBool(key, response, result));
+
+        Stream.of("NewConnectionStatus", "NewPossibleConnectionTypes", "NewConnectionType", "NewName",
+            "NewLastConnectionError", "NewExternalIPAddress", "NewDNSServers", "NewMACAddress", "NewConnectionTrigger",
+            "NewRouteProtocolRx")
+            .forEach(key -> putString(key, response, result));
     }
 
-    private void ethernetInterfaceConfig(final FritzConnection connection, final JSONObject result) throws IOException, NoSuchFieldException {
+    private void ethernetInterfaceConfig(final FritzConnection connection, final JSONObject result) throws IOException {
         final Response response = get(connection, "LANEthernetInterfaceConfig:1", "GetStatistics");
-        result.put("NewBytesReceived", response.getValueAsLong("NewBytesReceived"));
-        result.put("NewBytesSent", response.getValueAsLong("NewBytesSent"));
-        result.put("NewPacketsReceived", response.getValueAsLong("NewPacketsReceived"));
-        result.put("NewPacketsSent", response.getValueAsLong("NewPacketsSent"));
+
+        Stream.of("NewBytesReceived", "NewBytesSent", "NewPacketsReceived", "NewPacketsSent")
+            .forEach(key -> putLong(key, response, result));
     }
 
-    private void wanInterfaceConfig(final FritzConnection connection, final JSONObject result) throws IOException, NoSuchFieldException {
-        Response response = get(connection, "WANCommonInterfaceConfig:1", "GetCommonLinkProperties");
-        result.put("NewLayer1DownstreamMaxBitRate", response.getValueAsLong("NewLayer1DownstreamMaxBitRate"));
-        result.put("NewLayer1UpstreamMaxBitRate", response.getValueAsLong("NewLayer1UpstreamMaxBitRate"));
-        result.put("NewPhysicalLinkStatus", response.getValueAsString("NewPhysicalLinkStatus").equalsIgnoreCase("up") ? 1 : 0);
+    private void wanInterfaceConfig(final FritzConnection connection, final JSONObject result) throws IOException {
+        final Response response1 = get(connection, "WANCommonInterfaceConfig:1", "GetCommonLinkProperties");
+        Stream.of("NewLayer1DownstreamMaxBitRate", "NewLayer1UpstreamMaxBitRate")
+            .forEach(key -> putLong(key, response1, result));
 
-        response = get(connection, "WANCommonInterfaceConfig:1", "GetTotalBytesSent");
-        result.put("NewTotalBytesSent", response.getValueAsLong("NewTotalBytesSent"));
+        Stream.of("NewPhysicalLinkStatus")
+            .forEach(key -> putString(key, response1, result));
 
-        response = get(connection, "WANCommonInterfaceConfig:1", "GetTotalBytesReceived");
-        result.put("NewTotalBytesReceived", response.getValueAsLong("NewTotalBytesReceived"));
+        final Response response2 = get(connection, "WANCommonInterfaceConfig:1", "GetTotalBytesSent");
+        Stream.of("NewTotalBytesSent")
+            .forEach(key -> putLong(key, response2, result));
+
+        final Response response3 = get(connection, "WANCommonInterfaceConfig:1", "GetTotalBytesReceived");
+        Stream.of("NewTotalBytesReceived")
+            .forEach(key -> putLong(key, response3, result));
 
         if (type == BoxType.dsl) {
-            response = get(connection, "WANPPPConnection:1", "GetInfo");
-            result.put("NewConnectionStatus", response.getValueAsString("NewConnectionStatus").equalsIgnoreCase("connected") ? 1 : 0);
-            result.put("NewUptime", response.getValueAsLong("NewUptime"));
-            result.put("NewExternalIPAddress", response.getValueAsString("NewExternalIPAddress"));
+            final Response response4 = get(connection, "WANPPPConnection:1", "GetInfo");
+            Stream.of("NewUptime")
+                .forEach(key -> putLong(key, response4, result));
+            Stream.of("NewConnectionStatus", "NewExternalIPAddress")
+                .forEach(key -> putString(key, response4, result));
         }
+    }
+
+    private void putString(String key, Response source, final JSONObject target) {
+        try {
+            target.put(key, source.getValueAsString(key));
+        } catch (NoSuchFieldException e) {
+            notFound(key, e);
+        }
+    }
+
+    private void putLong(String key, Response source, final JSONObject target) {
+        try {
+            target.put(key, source.getValueAsLong(key));
+        } catch (NoSuchFieldException e) {
+            notFound(key, e);
+        }
+    }
+
+    private void putBool(String key, Response source, final JSONObject target) {
+        try {
+            target.put(key, source.getValueAsBoolean(key));
+        } catch (NoSuchFieldException e) {
+            notFound(key, e);
+        }
+    }
+
+    private void notFound(final String key, final NoSuchFieldException e) {
+        LOGGER.error("Value not found: {}", key, e);
     }
 
     private Response get(final FritzConnection connection, final String serviceName, final String actionName) throws IOException {
