@@ -2,9 +2,12 @@ package de.rnd7.fritzboxmqttgw;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumSet;
 
 import de.rnd7.mqttgateway.GwMqttClient;
 import de.rnd7.mqttgateway.config.ConfigParser;
+import de.rnd7.fritzboxmqttgw.config.BoxType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +40,14 @@ public class Main {
         }
 
         try {
-            new Main(ConfigParser.parse(new File(args[0]), Config.class));
+            final Config config = ConfigParser.parse(new File(args[0]), Config.class);
+
+            if (EnumSet.of(BoxType.dsl, BoxType.cable).contains(config.getFritzbox().getBoxType())) {
+                new Main(config);
+            }
+            else {
+                LOGGER.error("BoxType <" + config.getFritzbox().getBoxType() + "> not supported", new Throwable());
+            }
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
         }

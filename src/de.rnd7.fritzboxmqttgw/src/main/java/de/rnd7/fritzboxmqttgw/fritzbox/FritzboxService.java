@@ -33,10 +33,11 @@ public class FritzboxService {
         try {
             final FritzboxDownloader downloader = new FritzboxDownloader(config.getHost(),
                     config.getUsername(),
-                    config.getPassword());
+                    config.getPassword(),
+                    config.getBoxType());
 
             final String message = downloader.downloadInfo().toString();
-            Events.post(PublishMessage.relative("dsl",
+            Events.post(PublishMessage.relative(config.getBoxType().toString(),
                     message));
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);

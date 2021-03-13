@@ -11,6 +11,7 @@
     "fritzbox": {
         "host": "192.168.2.1",
         "username": "fritzbox-username",
-        "password": "fritzbox-password"
+        "password": "fritzbox-password",
+        "box-type": "cable"
     }
 }
