@@ -1,5 +1,5 @@
 # ---- Prod ----
-FROM openjdk:8-jdk-alpine
+FROM openjdk:17-jdk-alpine
 LABEL maintainer="Philipp Arndt <2f.mail@gmx.de>"
 LABEL version="1.0"
 LABEL description="fritzbox to mqtt gateway"
